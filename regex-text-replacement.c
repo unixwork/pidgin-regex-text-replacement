@@ -85,10 +85,10 @@ static PurplePluginInfo info = {
     "Regex Text Replacement",
     "0.9",
 
-    "Replace text with regex ruls",          
+    "Replace text with regex rules",          
     "Replace text in outgoing messages with regex rules",          
     "Olaf Wintermann <olaf.wintermann@gmail.com>",                          
-    "https://github.com/unixwork/regex-text-replacement",     
+    "https://github.com/unixwork/pidgin-regex-text-replacement",     
     
     plugin_load,                   
     plugin_unload,                          
