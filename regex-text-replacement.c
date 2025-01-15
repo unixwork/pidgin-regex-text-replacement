@@ -206,11 +206,6 @@ int load_rules(const char *file, TextReplacementRule **rules, size_t *len) {
         // if a separator was found, we can add the rule
         if(separator > 0) {
             ln[separator] = '\0';
-            regex_t regex;
-            if(regcomp(&regex, ln, REG_EXTENDED)) {
-                fprintf(stderr, "Cannot compile pattern: %s\n", ln);
-                continue;
-            }
             
             char *pattern = strdup(ln);
             char *replacement = strdup(ln+separator+1);
@@ -221,10 +216,17 @@ int load_rules(const char *file, TextReplacementRule **rules, size_t *len) {
             }
             r[rules_size].pattern = pattern;
             r[rules_size].replacement = replacement;
-            r[rules_size].regex = regex;
+            
+            // compile the rule
+            if(regcomp(&r[rules_size].regex, ln, REG_EXTENDED) == 0) {
+                r[rules_size].compiled = TRUE;
+            } else {
+                fprintf(stderr, "Cannot compile pattern: %s\n", ln);
+            }
+            
             rules_size++;
         } else {
-            fprintf(stderr, "Invalid text replacement rule: {%s}\n", ln);
+            fprintf(stderr, "Invalid text replacement rule: %s\n", ln);
         }
     }
     fclose(in);
@@ -242,7 +244,9 @@ void free_rules(TextReplacementRule *rules, size_t nelm) {
     for(size_t i=0;i<nelm;i++) {
         free(rules[i].pattern);
         free(rules[i].replacement);
-        regfree(&rules[i].regex);
+        if(rules[i].compiled) {
+            regfree(&rules[i].regex);
+        }
     }
     free(rules);
 }
@@ -384,7 +388,9 @@ char* apply_rule(char *msg_in, TextReplacementRule *rule) {
 void apply_all_rules(char **msg) {
     char *msg_in = *msg;
     for(int i=0;i<nrules;i++) {
-        msg_in = apply_rule(msg_in, &rules[i]);
+        if(rules[i].compiled) {
+            msg_in = apply_rule(msg_in, &rules[i]);
+        }
     }
     *msg = msg_in;
 }

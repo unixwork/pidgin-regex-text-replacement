@@ -59,6 +59,11 @@ typedef struct TextReplacementRule {
      * compiled regex
      */
     regex_t regex;
+    
+    /*
+     * regex compiled successfully
+     */
+    int compiled;
 } TextReplacementRule;
 
 /*
@@ -97,5 +102,8 @@ char* str_replace(const char *in, const char *str, const char *replacement);
  */
 char* apply_rule(char *msg_in, TextReplacementRule *rule);
 
+/*
+ * apply all (compiled) rules to msg
+ */
 void apply_all_rules(char **msg);
 
