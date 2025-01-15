@@ -22,6 +22,8 @@
 
 #include <util.h> /* pidgin/util.h */
 
+#include <errno.h>
+
 
 static gboolean writing_chat_msg(PurpleAccount *account, const char *who,
                                  char **message, PurpleConversation *conv,
@@ -161,6 +163,12 @@ int load_rules(const char *file, TextReplacementRule **rules, size_t *len) {
     
     FILE *in = fopen(file, "r");
     if(!in) {
+        if(errno == ENOENT) {
+            FILE *out = fopen(file, "w");
+            fputs("?v1\n", out);
+            fclose(out);
+            return 0;
+        }
         return 1;
     }
     

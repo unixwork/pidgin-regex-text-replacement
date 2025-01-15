@@ -34,6 +34,7 @@ int main(int argc, char **argv) {
 
 CX_TEST(test_load_rules) {
     FILE *testfile = fopen("testfile", "w");
+    fputs("?v1\n", testfile);
     fputs("# comment\n", testfile);
     fputs("abc\t123\n", testfile);
     fputs("\\#escaped\t#replacement\n", testfile);
