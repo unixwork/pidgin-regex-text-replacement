@@ -111,11 +111,20 @@ static void init_plugin(PurplePlugin *plugin)
 
 PURPLE_INIT_PLUGIN(regex_text_replace, init_plugin, info)
         
+
+static void writing_msg(char **message, PurpleMessageFlags flags) {
+    // apply rules only on send
+    if((flags & PURPLE_MESSAGE_SEND) == 0) {
+        return;
+    }
+    apply_all_rules(message);
+}
+
 static gboolean writing_chat_msg(PurpleAccount *account, const char *who,
                                  char **message, PurpleConversation *conv,
                                  PurpleMessageFlags flags)
 {
-    apply_all_rules(message);
+    writing_msg(message, flags);
     return FALSE;
 }
 
@@ -124,7 +133,7 @@ static gboolean writing_im_msg(PurpleAccount *account, const char *who,
                                char **message, PurpleConversation *conv,
                                PurpleMessageFlags flags)
 {
-    apply_all_rules(message);
+    writing_msg(message, flags);
     return FALSE;
 }
 
@@ -167,7 +176,6 @@ int load_rules(const char *file, TextReplacementRule **rules, size_t *len) {
         size_t lnlen = strlen(ln);
         // check for comment
         if(ln[0] == '#') {
-            //free(line); // TODO: fix
             continue;
         }
         // \# escapes # at line start
@@ -179,6 +187,11 @@ int load_rules(const char *file, TextReplacementRule **rules, size_t *len) {
         // remove trailing newline
         if(lnlen > 0 && ln[lnlen-1] == '\n') {
             ln[lnlen-1] = '\0';
+            lnlen--;
+        }
+        
+        if(lnlen == 0) {
+            continue;
         }
         
         // find first \t separator
@@ -196,7 +209,6 @@ int load_rules(const char *file, TextReplacementRule **rules, size_t *len) {
             regex_t regex;
             if(regcomp(&regex, ln, REG_EXTENDED)) {
                 fprintf(stderr, "Cannot compile pattern: %s\n", ln);
-                //free(line); // TODO: fix
                 continue;
             }
             
@@ -212,11 +224,13 @@ int load_rules(const char *file, TextReplacementRule **rules, size_t *len) {
             r[rules_size].regex = regex;
             rules_size++;
         } else {
-            fprintf(stderr, "Invalid text replacement rule: %s\n", ln);
+            fprintf(stderr, "Invalid text replacement rule: {%s}\n", ln);
         }
-        //free(line); // TODO: fix
     }
     fclose(in);
+    if(line) {
+        free(line);
+    }
     
     *rules = r;
     *len = rules_size;
