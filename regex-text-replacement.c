@@ -155,7 +155,6 @@ char *rules_file_path(void) {
     return g_build_filename(user_dir, REGEX_TEXT_REPLACEMENT_RULES_FILE, NULL);
 }
 
-// TODO: some free in this function crashes
 int load_rules(const char *file, TextReplacementRule **rules, size_t *len) {
     *rules = NULL;
     *len = 0;
@@ -168,12 +167,32 @@ int load_rules(const char *file, TextReplacementRule **rules, size_t *len) {
     size_t rules_alloc = 16;
     size_t rules_size = 0;
     TextReplacementRule *r = calloc(rules_alloc, sizeof(TextReplacementRule));
-    
+      
     char *line = NULL;
     size_t linelen = 0;
+    
+    // read format version
+    size_t vlen = getline(&line, &linelen, in);
+    if(vlen == 0) {
+        free(line);
+        fclose(in);
+        return 0;
+    }
+    
+    if(line[vlen-1] == '\n') {
+        line[vlen-1] = 0;
+    }
+    if(strcmp(line, "?v1")) {
+        fprintf(stderr, "Unknown file format version: %s\n", line);
+        free(line);
+        fclose(in);
+        return 1;
+    }
+    
+    // read rules
     while(getline(&line, &linelen, in) >= 0) {
         char *ln = line;
-        size_t lnlen = strlen(ln);
+        size_t lnlen = strlen(ln);    
         // check for comment
         if(ln[0] == '#') {
             continue;
