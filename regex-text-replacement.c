@@ -292,7 +292,12 @@ int rule_update_pattern(size_t index, char *new_pattern) {
     TextReplacementRule *rule = &rules[index];
     free(rule->pattern);
     rule->pattern = strdup(new_pattern);
-    rule->compiled = regcomp(&rule->regex, new_pattern, REG_EXTENDED) == 0;
+    if(strlen(new_pattern) > 0) {
+        rule->compiled = regcomp(&rule->regex, new_pattern, REG_EXTENDED) == 0;
+    } else {
+        rule->compiled = 0;
+    }
+    
     return rule->compiled;
 }
 
