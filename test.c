@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include "test.h"
+#include "ui.h"
 
 int main(int argc, char **argv) {
     CxTestSuite *suite = cx_test_suite_new("regex-text-replacement");

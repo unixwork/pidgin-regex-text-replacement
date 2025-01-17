@@ -16,6 +16,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef RTR_H
+#define RTR_H
+
 #include <stdlib.h>
 #include <sys/types.h>
 
@@ -90,6 +93,34 @@ int load_rules(const char *file, TextReplacementRule **rules, size_t *len);
 void free_rules(TextReplacementRule *rules, size_t nelm);
 
 /*
+ * returns the array of loaded text replacement rules
+ */
+TextReplacementRule* get_rules(size_t *numelm);
+
+/*
+ * replace the rule's pattern
+ * returns 1 if the pattern was compiled successfully
+ * returns 0 if the pattern couldn't be compiled
+ */
+int rule_update_pattern(size_t index, char *new_pattern);
+
+/*
+ * replace the rule's text replacement at the specified index
+ */
+void rule_update_replacement(size_t index, char *new_replacement);
+
+/*
+ * adds a new empty rule to the rules array
+ * returns the new size of the array
+ */
+size_t add_empty_rule(void);
+
+/*
+ * save loaded rules to ~/.purple/regex-text-replacement.rules 
+ */
+int save_rules(void);
+
+/*
  * Replace all occurrences of str in in with replacement
  */
 char* str_replace(const char *in, const char *str, const char *replacement);
@@ -107,3 +138,4 @@ char* apply_rule(char *msg_in, TextReplacementRule *rule);
  */
 void apply_all_rules(char **msg);
 
+#endif /* RTR_H */

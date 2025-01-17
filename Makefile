@@ -26,7 +26,7 @@ PLUGIN_LIB = regex-text-replacement.so
 BUILD_RESULT = build/$(PLUGIN_LIB)
 TESTBIN = build/plugin-test
 
-OBJ = build/regex-text-replacement.o
+OBJ = build/regex-text-replacement.o build/ui.o
 
 TEST_OBJ = build/test.o
 
@@ -42,6 +42,9 @@ $(TESTBIN): $(OBJ) $(TEST_OBJ)
 	$(CC) -o $@ $(OBJ) $(TEST_OBJ) $(LDFLAGS) $(PLUGIN_LDFLAGS)
 
 build/regex-text-replacement.o: regex-text-replacement.c regex-text-replacement.h 
+	$(CC) -c -o $@ $< $(CFLAGS) $(PLUGIN_CFLAGS)
+	
+build/ui.o: ui.c ui.h regex-text-replacement.h 
 	$(CC) -c -o $@ $< $(CFLAGS) $(PLUGIN_CFLAGS)
 
 build/test.o: test.c test.h regex-text-replacement.h cx/test.h cx/common.h

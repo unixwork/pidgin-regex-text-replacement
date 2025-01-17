@@ -19,6 +19,7 @@
 #define PURPLE_PLUGINS
 
 #include "regex-text-replacement.h"
+#include "ui.h"
 
 #include <util.h> /* pidgin/util.h */
 
@@ -49,7 +50,6 @@ static gboolean plugin_load(PurplePlugin *plugin) {
         return TRUE;
     }
     
-    
     void *conversation = purple_conversations_get_handle();
     // callbacks for handling writing to the conversation window locally
     purple_signal_connect(conversation, "writing-im-msg",
@@ -73,12 +73,24 @@ static gboolean plugin_unload(PurplePlugin *plugin) {
     return TRUE;
 }
 
+static PidginPluginUiInfo ui_info =
+{
+    get_config_frame,
+    0,
+
+    /* padding */
+    NULL,
+    NULL,
+    NULL,
+    NULL
+};
+
 static PurplePluginInfo info = {
     PURPLE_PLUGIN_MAGIC,
     PURPLE_MAJOR_VERSION,
     PURPLE_MINOR_VERSION,
     PURPLE_PLUGIN_STANDARD,
-    NULL,
+    PIDGIN_PLUGIN_TYPE,
     0,
     NULL,
     PURPLE_PRIORITY_HIGHEST,
@@ -96,10 +108,11 @@ static PurplePluginInfo info = {
     plugin_unload,                          
     NULL,                          
                                    
-    NULL,                          
+    &ui_info,                          
     NULL,                          
     NULL,                        
-    NULL,                   
+    NULL, 
+    
     NULL,                          
     NULL,                          
     NULL,                          
@@ -265,6 +278,61 @@ int load_rules(const char *file, TextReplacementRule **rules, size_t *len) {
     *len = rules_size;
     
     return 0;
+}
+
+TextReplacementRule* get_rules(size_t *numelm) {
+    *numelm = nrules;
+    return rules;
+}
+
+int rule_update_pattern(size_t index, char *new_pattern) {
+    if(index >= nrules) {
+        return 0;
+    }
+    TextReplacementRule *rule = &rules[index];
+    free(rule->pattern);
+    rule->pattern = strdup(new_pattern);
+    rule->compiled = regcomp(&rule->regex, new_pattern, REG_EXTENDED) == 0;
+    return rule->compiled;
+}
+
+void rule_update_replacement(size_t index, char *new_replacement) {
+    if(index >= nrules) {
+        return;
+    }
+    TextReplacementRule *rule = &rules[index];
+    free(rule->replacement);
+    rule->replacement = strdup(new_replacement);
+}
+
+int save_rules(void) {
+    printf("save_rules\n");
+    
+    char *path = rules_file_path();
+    FILE *out = fopen(path, "w");
+    free(path);
+    if(!out) {
+        return 1;
+    }
+    
+    fputs("?v1\n", out);
+    for(int i=0;i<nrules;i++) {
+        TextReplacementRule *rule = &rules[i];
+        if(rule->pattern && strlen(rule->pattern) > 0) {
+            fprintf(out, "%s\t%s\n", rule->pattern, rule->replacement);
+            printf("%s\t%s\n", rule->pattern, rule->replacement);
+        }
+    }
+    
+    fclose(out);
+    return 0;
+}
+
+size_t add_empty_rule(void) {
+    nrules++;
+    rules = realloc(rules, nrules * sizeof(TextReplacementRule));
+    memset(&rules[nrules-1], 0, sizeof(TextReplacementRule));
+    return nrules;
 }
 
 void free_rules(TextReplacementRule *rules, size_t nelm) {
