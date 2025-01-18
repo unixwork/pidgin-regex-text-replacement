@@ -97,7 +97,7 @@ static PurplePluginInfo info = {
 
     "regex-text-replacement",
     "Regex Text Replacement",
-    "0.9",
+    "1.0",
 
     "Replace text with regex rules",          
     "Replace text in outgoing messages with regex rules",          
