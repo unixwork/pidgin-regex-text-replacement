@@ -21,5 +21,5 @@
 #include "cx/test.h"
 
 CX_TEST(test_load_rules);
-CX_TEST(test_str_replace);
+CX_TEST(test_str_unescape_and_replace);
 CX_TEST(test_apply_rule);

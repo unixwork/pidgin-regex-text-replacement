@@ -351,8 +351,8 @@ void free_rules(TextReplacementRule *rules, size_t nelm) {
     free(rules);
 }
 
-
-char* str_replace(const char *in, const char *search, const char *replacement) {
+/*
+char* str_unescape_and_replace(const char *in, const char *search, const char *replacement) {
     size_t len = strlen(in);
     size_t placeholder_len = strlen(search);
     size_t replacement_len = strlen(replacement);
@@ -405,6 +405,72 @@ char* str_replace(const char *in, const char *search, const char *replacement) {
     
     return newstr;
 }
+*/
+
+char* str_unescape_and_replace(
+        const char *in,
+        const char *search,
+        const char *replacement)
+{
+    size_t alloc = 1024;
+    size_t pos = 0;
+    char *newstr = malloc(alloc);
+    
+    size_t search_len = strlen(search);
+    size_t replacement_len = strlen(replacement);
+    
+    int escaped = 0;
+    int match = 0;
+    char c;
+    for(;(c = *in ) != '\0';in++) {
+        int matchchar = 1;
+        if(escaped) {
+            switch(c) {
+                case 'n': c = '\n'; break;
+                case 't': c = '\t'; break;
+                case 'r': c = '\r'; break;
+                case '$': matchchar = 0; break; // don't match escaped $
+            }
+        } else if(!escaped && c == '\\') {
+            escaped = 1;
+            continue;
+        }
+        if(pos + match >= alloc) {
+            alloc *= 2;
+            newstr = realloc(newstr, alloc);
+        }
+        
+        if(search_len > 0 && matchchar && c == search[match]) {
+            match++;
+            if(match == search_len) {
+                if(pos + replacement_len + 1 >= alloc) {
+                    alloc *= 2;
+                    newstr = realloc(newstr, alloc);
+                }
+                memcpy(newstr + pos, replacement, replacement_len);
+                pos += replacement_len;
+                match = 0;
+            }
+        } else {
+            if(match > 0) {
+                // copy previously skipped characters
+                memcpy(newstr + pos, in - match, match);
+                pos += match;
+            }
+            match = 0;
+            newstr[pos++] = c;
+        }
+        escaped = 0;
+    }
+    
+    if(pos >= alloc) {
+        alloc++;
+        newstr = realloc(newstr, alloc);
+    }
+    newstr[pos] = '\0';
+    
+    return newstr;
+}
 
 char* apply_rule(char *msg_in, TextReplacementRule *rule) {
     size_t len = strlen(msg_in);
@@ -441,7 +507,7 @@ char* apply_rule(char *msg_in, TextReplacementRule *rule) {
             char *capture_group = malloc(cg_len + 1);
             memcpy(capture_group, in+matches[1].rm_so, cg_len);
             capture_group[cg_len] = 0;
-            rpl = str_replace(rule->replacement, "$1", capture_group);
+            rpl = str_unescape_and_replace(rule->replacement, "$1", capture_group);
             free(capture_group);
         }
         size_t rpl_len = strlen(rpl);

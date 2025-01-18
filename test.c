@@ -27,7 +27,7 @@
 int main(int argc, char **argv) {
     CxTestSuite *suite = cx_test_suite_new("regex-text-replacement");
     cx_test_register(suite, test_load_rules);
-    cx_test_register(suite, test_str_replace);
+    cx_test_register(suite, test_str_unescape_and_replace);
     cx_test_register(suite, test_apply_rule);
     cx_test_run_stdout(suite);
     cx_test_suite_free(suite);
@@ -70,31 +70,66 @@ CX_TEST(test_load_rules) {
                   "eeeeeeeeeeeeeeeeeeeeeefffffffffffffffffffffffff" \
                   "gggggggggggggggggggggghhhhhhhhhhhhhhhhhhhhhhhhh"
 
-CX_TEST(test_str_replace) {
+CX_TEST(test_str_unescape_and_replace) {
     CX_TEST_DO {
-        char *s = str_replace("hello $1 world $1 !", "$1", ":)");
+        char *s = str_unescape_and_replace("hello $1 world $1 !", "$1", ":)");
         CX_TEST_ASSERT(s != NULL);
         CX_TEST_ASSERT(!strcmp(s, "hello :) world :) !"));
         free(s);
         
-        s = str_replace("{}", "{}", "replace_all");
+        s = str_unescape_and_replace("{}", "{}", "replace_all");
         CX_TEST_ASSERT(s != NULL);
         CX_TEST_ASSERT(!strcmp(s, "replace_all"));
         free(s);
         
-        s = str_replace("no replacement", "123", "abc");
+        s = str_unescape_and_replace("no replacement", "123", "abc");
         CX_TEST_ASSERT(s != NULL);
         CX_TEST_ASSERT(!strcmp(s, "no replacement"));
         free(s);
         
-        s = str_replace("empty {placeholder} replacement", "{placeholder}", "");
+        s = str_unescape_and_replace("empty {placeholder} replacement", "{placeholder}", "");
         CX_TEST_ASSERT(s != NULL);
         CX_TEST_ASSERT(!strcmp(s, "empty  replacement"));
         free(s);
         
-        s = str_replace("axb", "x", LARGE_STR);
+        s = str_unescape_and_replace("axb", "x", LARGE_STR);
         CX_TEST_ASSERT(s != NULL);
         CX_TEST_ASSERT(!strcmp(s, "a" LARGE_STR "b"));
+        free(s);
+        
+        s = str_unescape_and_replace("test abc abc abcdef end", "abcdef", "-");
+        CX_TEST_ASSERT(s != NULL);
+        CX_TEST_ASSERT(!strcmp(s, "test abc abc - end"));
+        free(s);
+        
+        s = str_unescape_and_replace("test \\$1 end", "$1", "fail");
+        CX_TEST_ASSERT(s != NULL);
+        CX_TEST_ASSERT(!strcmp(s, "test $1 end"));
+        free(s);
+        
+        s = str_unescape_and_replace("don't escape: \\$1 escape: $1", "$1", "escaped");
+        CX_TEST_ASSERT(s != NULL);
+        CX_TEST_ASSERT(!strcmp(s, "don't escape: $1 escape: escaped"));
+        free(s);
+        
+        s = str_unescape_and_replace("\\n", "", "");
+        CX_TEST_ASSERT(s != NULL);
+        CX_TEST_ASSERT(!strcmp(s, "\n"));
+        free(s);
+        
+        s = str_unescape_and_replace("\\r\\n\\t", "", "");
+        CX_TEST_ASSERT(s != NULL);
+        CX_TEST_ASSERT(!strcmp(s, "\r\n\t"));
+        free(s);
+        
+        s = str_unescape_and_replace("replace\\nnewline", "\n", "<br>");
+        CX_TEST_ASSERT(s != NULL);
+        CX_TEST_ASSERT(!strcmp(s, "replace<br>newline"));
+        free(s);
+        
+        s = str_unescape_and_replace("test1match\\nthistest2", "match\nthis", "<br>");
+        CX_TEST_ASSERT(s != NULL);
+        CX_TEST_ASSERT(!strcmp(s, "test1<br>test2"));
         free(s);
     }
 }

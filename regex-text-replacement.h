@@ -122,8 +122,13 @@ int save_rules(void);
 
 /*
  * Replace all occurrences of str in in with replacement
+ * 
+ * Also unescapes: \t \n \$ \\
  */
-char* str_replace(const char *in, const char *str, const char *replacement);
+char* str_unescape_and_replace(
+        const char *in,
+        const char *str,
+        const char *replacement);
 
 /*
  * Applies the text replacement rule to msg_in
