@@ -83,8 +83,6 @@ GtkWidget *get_config_frame(PurplePlugin *plugin) {
     
     gtk_table_attach(GTK_TABLE(grid), scroll_area, 1, 2, 0, 1, xoptions, yoptions, 0, 0);
     
-    GtkWidget *hbox = gtk_hbox_new(TRUE, 8);
-    
     g_signal_connect(
                 add,
                 "clicked",
@@ -106,7 +104,12 @@ GtkWidget *get_config_frame(PurplePlugin *plugin) {
                 G_CALLBACK(move_down_button_clicked),
                 NULL);
     
-    gtk_table_attach(GTK_TABLE(grid), hbox, 0, 2, 1, 2, 0, 0, 0, 0);
+    GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
+    gtk_table_attach(GTK_TABLE(grid), hbox, 0, 2, 1, 2, 0, GTK_FILL, GTK_FILL, 0);
+    
+    GtkWidget *label1 = gtk_label_new("Use $1 in the replacement text to include the text matched by the first regex capture group.");
+    gtk_label_set_line_wrap(GTK_LABEL(label1), TRUE);
+    gtk_box_pack_start(GTK_BOX(hbox), label1, FALSE, FALSE, 0);
     
     g_signal_connect(
                 grid,
