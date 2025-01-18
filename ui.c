@@ -45,8 +45,6 @@ static void move_down_button_clicked(GtkWidget *widget, void *userdata);
 static int rules_modified = 0;
 
 static void cleanup_ui(GtkWidget *object, void *userdata) {
-    printf("cleanup_ui\n");
-    
     treeview = NULL;
     liststore = NULL;
     
@@ -163,7 +161,6 @@ static void update_liststore(TextReplacementRule *rules, size_t numrules) {
     liststore = gtk_list_store_newv(2, types);
     
     for(int i=0;i<numrules;i++) {
-        printf("insert rule: %s    %s\n", rules[i].pattern, rules[i].replacement);
         GtkTreeIter iter;
         gtk_list_store_insert (liststore, &iter, i);
         GValue value = G_VALUE_INIT;
@@ -194,7 +191,6 @@ static void pattern_edited(GtkCellRendererText* self, gchar* path, gchar* new_te
     update_text(liststore, path, 0, new_text);
     
     int compiled = rule_update_pattern(index, new_text);
-    printf("update pattern[%d]: %d\n", index, compiled);
     rules_modified = 1;
 }
 
@@ -202,7 +198,6 @@ static void preplacement_edited(GtkCellRendererText* self, gchar* path, gchar* n
     int index = atoi(path);
     update_text(liststore, path, 1, new_text);
     rule_update_replacement(index, new_text);
-    printf("update replacement: %s\n", new_text);
     rules_modified = 1;
 }
 

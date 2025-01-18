@@ -338,8 +338,6 @@ void rule_move_down(size_t index) {
 }
 
 int save_rules(void) {
-    printf("save_rules\n");
-    
     char *path = rules_file_path();
     FILE *out = fopen(path, "w");
     free(path);
@@ -352,7 +350,6 @@ int save_rules(void) {
         TextReplacementRule *rule = &rules[i];
         if(rule->pattern && strlen(rule->pattern) > 0) {
             fprintf(out, "%s\t%s\n", rule->pattern, rule->replacement);
-            printf("%s\t%s\n", rule->pattern, rule->replacement);
         }
     }
     
