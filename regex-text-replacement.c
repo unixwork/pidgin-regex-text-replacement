@@ -319,6 +319,24 @@ void rule_remove(size_t index) {
     nrules--;
 }
 
+void rule_move_up(size_t index) {
+    if(index == 0 || index >= nrules) {
+        return;
+    }
+    TextReplacementRule tmp = rules[index-1];
+    rules[index-1] = rules[index];
+    rules[index] = tmp;
+}
+
+void rule_move_down(size_t index) {
+    if(index+1 >= nrules) {
+        return;
+    }
+    TextReplacementRule tmp = rules[index+1];
+    rules[index+1] = rules[index];
+    rules[index] = tmp;
+}
+
 int save_rules(void) {
     printf("save_rules\n");
     

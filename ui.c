@@ -206,11 +206,45 @@ static void preplacement_edited(GtkCellRendererText* self, gchar* path, gchar* n
     rules_modified = 1;
 }
 
+
+// ---------------- gtk treeview helper ----------------
+static int treeview_get_selection(void) {
+    GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    int index = -1;
+    if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
+        gint *indices = gtk_tree_path_get_indices(path);
+        if(indices) {
+            index = *indices;
+        }
+        gtk_tree_path_free(path);
+    }
+    return index;
+}
+
+static void treeview_set_selection(gint selection, int edit) {
+    GtkTreeSelection *sel = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
+    GtkTreePath *path = gtk_tree_path_new_from_indices(selection, -1);
+    gtk_tree_selection_select_path(sel, path);
+    
+    if(edit) {
+        GtkTreeViewColumn *column = gtk_tree_view_get_column(GTK_TREE_VIEW(treeview), 0);
+        gtk_tree_view_set_cursor_on_cell(GTK_TREE_VIEW(treeview), path, column, NULL, TRUE);
+    }
+    
+    gtk_tree_path_free(path);
+}
+
+// ---------------- button event handler ----------------
+
 static void add_button_clicked(GtkWidget *widget, void *userdata) {
     add_empty_rule();
     size_t nrules;
     TextReplacementRule *rules = get_rules(&nrules);
     update_liststore(rules, nrules);
+    treeview_set_selection(nrules-1, TRUE);
 }
 
 static void remove_button_clicked(GtkWidget *widget, void *userdata) {
@@ -218,10 +252,9 @@ static void remove_button_clicked(GtkWidget *widget, void *userdata) {
     GtkTreeModel *model;
     GtkTreeIter iter;
     if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
-        GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
-        gint *indices = gtk_tree_path_get_indices(path);
-        if(indices) {
-            rule_remove(*indices);
+        int index = treeview_get_selection();
+        if(index >= 0) {
+            rule_remove(index);
         }
         gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
     }
@@ -229,9 +262,25 @@ static void remove_button_clicked(GtkWidget *widget, void *userdata) {
 }
 
 static void move_up_button_clicked(GtkWidget *widget, void *userdata) {
-    
+    int index = treeview_get_selection();
+    if(index > 0) {
+        rule_move_up(index);
+        size_t nrules;
+        TextReplacementRule *rules = get_rules(&nrules);
+        update_liststore(rules, nrules);
+        rules_modified = 1;
+        treeview_set_selection(index-1, 0);
+    }
 }
 
 static void move_down_button_clicked(GtkWidget *widget, void *userdata) {
-    
+    int index = treeview_get_selection();
+    if(index >= 0) {
+        rule_move_down(index);
+        size_t nrules;
+        TextReplacementRule *rules = get_rules(&nrules);
+        update_liststore(rules, nrules);
+        rules_modified = 1;
+        treeview_set_selection(index+1, 0);
+    }
 }
