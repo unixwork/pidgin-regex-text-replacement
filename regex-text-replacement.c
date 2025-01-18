@@ -301,6 +301,24 @@ void rule_update_replacement(size_t index, char *new_replacement) {
     rule->replacement = strdup(new_replacement);
 }
 
+void rule_remove(size_t index) {
+    if(index >= nrules) {
+        fprintf(stderr, "rules array out of bounds: %d\n", (int)index);
+        return;
+    }
+    TextReplacementRule *r = &rules[index];
+    free(r->pattern);
+    free(r->replacement);
+    if(r->compiled) {
+        regfree(&r->regex);
+    }
+    
+    if(index+1 < nrules) {
+        memmove(rules+index, rules+index+1, (nrules-index-1)*sizeof(TextReplacementRule));
+    }
+    nrules--;
+}
+
 int save_rules(void) {
     printf("save_rules\n");
     

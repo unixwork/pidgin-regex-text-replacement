@@ -39,6 +39,8 @@ static void preplacement_edited(GtkCellRendererText* self, gchar* path, gchar* n
 
 static void add_button_clicked(GtkWidget *widget, void *userdata);
 static void remove_button_clicked(GtkWidget *widget, void *userdata);
+static void move_up_button_clicked(GtkWidget *widget, void *userdata);
+static void move_down_button_clicked(GtkWidget *widget, void *userdata);
 
 static int rules_modified = 0;
 
@@ -60,6 +62,17 @@ GtkWidget *get_config_frame(PurplePlugin *plugin) {
     gtk_table_set_col_spacings(GTK_TABLE(grid), 8);
     gtk_table_set_row_spacings(GTK_TABLE(grid), 8);
     
+    GtkWidget *add = gtk_button_new_with_label("Add");
+    GtkWidget *remove = gtk_button_new_with_label("Remove");
+    GtkWidget *up = gtk_button_new_with_label("Move Up");
+    GtkWidget *down = gtk_button_new_with_label("Move Down");
+    GtkWidget *vbox = gtk_vbox_new(FALSE, 8);
+    gtk_box_pack_start(GTK_BOX(vbox), add, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), remove, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), up, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), down, FALSE, FALSE, 0);
+    gtk_table_attach(GTK_TABLE(grid), vbox, 0, 1, 0, 1, 0, GTK_FILL, GTK_FILL, 0);
+    
     GtkWidget *view = create_treeview();
     GtkAttachOptions xoptions = GTK_FILL | GTK_EXPAND;
     GtkAttachOptions yoptions = GTK_FILL | GTK_EXPAND;
@@ -70,13 +83,9 @@ GtkWidget *get_config_frame(PurplePlugin *plugin) {
             GTK_POLICY_AUTOMATIC); 
     gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scroll_area), view);
     
-    gtk_table_attach(GTK_TABLE(grid), scroll_area, 0, 1, 0, 1, xoptions, yoptions, 0, 0);
+    gtk_table_attach(GTK_TABLE(grid), scroll_area, 1, 2, 0, 1, xoptions, yoptions, 0, 0);
     
     GtkWidget *hbox = gtk_hbox_new(TRUE, 8);
-    GtkWidget *add = gtk_button_new_with_label("Add");
-    GtkWidget *remove = gtk_button_new_with_label("Remove (TODO)");
-    gtk_container_add(GTK_CONTAINER(hbox), add);
-    gtk_container_add(GTK_CONTAINER(hbox), remove);
     
     g_signal_connect(
                 add,
@@ -88,8 +97,18 @@ GtkWidget *get_config_frame(PurplePlugin *plugin) {
                 "clicked",
                 G_CALLBACK(remove_button_clicked),
                 NULL);
+    g_signal_connect(
+                up,
+                "clicked",
+                G_CALLBACK(move_up_button_clicked),
+                NULL);
+    g_signal_connect(
+                down,
+                "clicked",
+                G_CALLBACK(move_down_button_clicked),
+                NULL);
     
-    gtk_table_attach(GTK_TABLE(grid), hbox, 0, 1, 1, 2, 0, 0, 0, 0);
+    gtk_table_attach(GTK_TABLE(grid), hbox, 0, 2, 1, 2, 0, 0, 0, 0);
     
     g_signal_connect(
                 grid,
@@ -195,5 +214,24 @@ static void add_button_clicked(GtkWidget *widget, void *userdata) {
 }
 
 static void remove_button_clicked(GtkWidget *widget, void *userdata) {
+    GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
+        gint *indices = gtk_tree_path_get_indices(path);
+        if(indices) {
+            rule_remove(*indices);
+        }
+        gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
+    }
+    rules_modified = 1;
+}
+
+static void move_up_button_clicked(GtkWidget *widget, void *userdata) {
+    
+}
+
+static void move_down_button_clicked(GtkWidget *widget, void *userdata) {
     
 }

@@ -110,6 +110,11 @@ int rule_update_pattern(size_t index, char *new_pattern);
 void rule_update_replacement(size_t index, char *new_replacement);
 
 /*
+ * Remove a rule at the specified index
+ */
+void rule_remove(size_t index);
+
+/*
  * adds a new empty rule to the rules array
  * returns the new size of the array
  */
