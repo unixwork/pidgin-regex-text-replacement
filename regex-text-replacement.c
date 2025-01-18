@@ -214,15 +214,6 @@ int load_rules(const char *file, TextReplacementRule **rules, size_t *len) {
     while(getline(&line, &linelen, in) >= 0) {
         char *ln = line;
         size_t lnlen = strlen(ln);    
-        // check for comment
-        if(ln[0] == '#') {
-            continue;
-        }
-        // \# escapes # at line start
-        if(lnlen >= 2 && ln[0] == '\\' && ln[1] == '#') {
-            ln++;
-            lnlen--;
-        }
         
         // remove trailing newline
         if(lnlen > 0 && ln[lnlen-1] == '\n') {
@@ -350,62 +341,6 @@ void free_rules(TextReplacementRule *rules, size_t nelm) {
     }
     free(rules);
 }
-
-/*
-char* str_unescape_and_replace(const char *in, const char *search, const char *replacement) {
-    size_t len = strlen(in);
-    size_t placeholder_len = strlen(search);
-    size_t replacement_len = strlen(replacement);
-    size_t alloc = len + replacement_len + 1;
-    size_t pos = 0;
-    char *newstr = malloc(alloc);
-    
-    const char *start = in;
-    char *s;
-    while((s = strstr(start, search)) != NULL) {
-        // add bytes from start to s
-        size_t cplen = s-start;
-        if(cplen > 0) {
-            if(pos + cplen >= alloc) {
-                alloc += cplen + 16;
-                newstr = realloc(newstr, alloc);
-            }
-            memcpy(newstr+pos, start, cplen);
-            pos += cplen;
-        }
-        
-        // replace str with replacement
-        if(pos + replacement_len >= alloc) {
-            alloc += replacement_len + 16;
-            newstr = realloc(newstr, alloc);
-        }
-        memcpy(newstr+pos, replacement, replacement_len);
-        pos += replacement_len;
-        
-        // next part
-        start = (const char*)s + placeholder_len;
-    }
-    
-    // add bytes after last occurrence
-    size_t remaining = in+len - start;
-    if(remaining > 0) {
-        if(pos+remaining >= alloc) {
-            alloc += remaining + 1;
-            newstr = realloc(newstr, alloc);
-        }
-        memcpy(newstr+pos, start, remaining);
-        pos += remaining;
-    }
-    
-    if(pos == alloc) {
-        alloc++;
-        newstr = realloc(newstr, alloc);
-    }
-    newstr[pos] = 0;
-    
-    return newstr;
-}
-*/
 
 char* str_unescape_and_replace(
         const char *in,
