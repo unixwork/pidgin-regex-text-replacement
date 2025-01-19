@@ -461,7 +461,7 @@ char* apply_rule(char *msg_in, TextReplacementRule *rule) {
         }
         
         // add anything before the match
-        size_t cplen = pos + matches[0].rm_so;
+        size_t cplen = matches[0].rm_so;
         if(cplen >= alloc) {
             alloc += cplen + 1024;
             newstr = g_realloc(newstr, alloc);

@@ -135,15 +135,42 @@ CX_TEST(test_str_unescape_and_replace) {
 
 CX_TEST(test_apply_rule) {
     TextReplacementRule rule0;
-    rule0.pattern = "abc([0-9]*)";
+    rule0.pattern = "X([0-9]*)";
     rule0.replacement = "id=$1";
     regcomp(&rule0.regex, rule0.pattern, REG_EXTENDED);
     
     CX_TEST_DO {
-        char *in = g_strdup("hello abc123 test end");
+        char *in = g_strdup("hello X123 test end");
         char *result = apply_rule(in, &rule0);
-        
         CX_TEST_ASSERT(result != NULL);
         CX_TEST_ASSERT(!strcmp(result, "hello id=123 test end"));
+        g_free(result);
+        
+        in = g_strdup("no pattern");
+        result = apply_rule(in, &rule0);
+        CX_TEST_ASSERT(result != NULL);
+        CX_TEST_ASSERT(in == result);
+        CX_TEST_ASSERT(!strcmp(result, "no pattern"));
+        g_free(result);
+        
+        in = g_strdup("double X123 pattern X123");
+        result = apply_rule(in, &rule0);
+        CX_TEST_ASSERT(result != NULL);
+        CX_TEST_ASSERT(!strcmp(result, "double id=123 pattern id=123"));
+        g_free(result);
+        
+        in = g_strdup("multiple pattern X123 in X123 this X123 text X123 X123 X123 X123 X123 X123 end");
+        result = apply_rule(in, &rule0);
+        CX_TEST_ASSERT(result != NULL);
+        CX_TEST_ASSERT(!strcmp(result, "multiple pattern id=123 in id=123 this id=123 text id=123 id=123 id=123 id=123 id=123 id=123 end"));
+        g_free(result);
+        
+        in = g_strdup("different cg values X1 test X23 TEST X345 test X4567 TEST X56789 end");
+        result = apply_rule(in, &rule0);
+        CX_TEST_ASSERT(result != NULL);
+        CX_TEST_ASSERT(!strcmp(result, "different cg values id=1 test id=23 TEST id=345 test id=4567 TEST id=56789 end"));
+        g_free(result);
     }
+    
+    regfree(&rule0.regex);
 }
